@@ -175,7 +175,6 @@ struct StudioView: View {
               HStack {
                 Button("Reset adjustments") { model.change(project.initial) }
                 Spacer()
-                Button("Save adjustments") { Task { await model.save() } }.disabled(model.saved)
               }
               Text("Decoder \(project.decoder) · Original preserved · JPEG export uses sRGB")
                 .font(.caption).foregroundStyle(.secondary)
@@ -183,6 +182,8 @@ struct StudioView: View {
           }.frame(maxHeight: 310)
         }.navigationTitle(project.name)
           .toolbar {
+            Button("Save adjustments", systemImage: "checkmark") { Task { await model.save() } }
+              .disabled(model.saved).keyboardShortcut("s")
             Button("Export JPEG", systemImage: "square.and.arrow.up") {
               exportTask?.cancel()
               exportBusy = true
