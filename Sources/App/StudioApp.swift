@@ -107,6 +107,7 @@ struct JPEGDocument: FileDocument {
 }
 struct StudioView: View {
   @State private var model = StudioModel()
+  @State private var selection: UUID?
   @State private var importing = false
   @State private var compare = false
   @State private var exporting = false
@@ -117,22 +118,15 @@ struct StudioView: View {
   @State private var confirmDiscard = false
   var body: some View {
     NavigationSplitView {
-      List {
+      List(selection: $selection) {
         ForEach(model.projects) { project in
-          Button {
-            if !model.saved {
-              pendingSelection = project
-              confirmDiscard = true
-            } else {
-              model.select(project)
-            }
-          } label: {
+          NavigationLink(value: project.id) {
             VStack(alignment: .leading, spacing: 4) {
               Text(project.name).font(.headline)
               Text("\(project.width) × \(project.height)").font(.caption).foregroundStyle(
                 .secondary)
             }
-          }.buttonStyle(.plain).accessibilityIdentifier("raw-project-" + project.id.uuidString)
+          }.accessibilityIdentifier("raw-project-" + project.id.uuidString)
         }
       }.navigationTitle("RAW Studio").navigationSplitViewColumnWidth(min: 210, ideal: 250)
         .toolbar {
@@ -207,6 +201,20 @@ struct StudioView: View {
           ))
       }
     }.task { await model.load() }
+      .onChange(of: selection) { _, id in
+        guard id != model.selected?.id, let project = model.projects.first(where: { $0.id == id })
+        else { return }
+        if !model.saved {
+          pendingSelection = project
+          confirmDiscard = true
+        } else {
+          model.select(project)
+        }
+      }
+      .onChange(of: model.selected?.id) { _, id in
+        selection = id
+        compare = false
+      }
       .fileImporter(isPresented: $importing, allowedContentTypes: [.rawImage]) { result in
         switch result {
         case .success(let url): model.importFile(url)
@@ -224,7 +232,7 @@ struct StudioView: View {
         Button("Discard changes", role: .destructive) {
           if let pendingSelection { model.select(pendingSelection) }
         }
-        Button("Keep editing", role: .cancel) {}
+        Button("Keep editing", role: .cancel) { selection = model.selected?.id }
       }
       .alert(
         "Couldn't finish",
