@@ -1,5 +1,7 @@
 # RAW Photo Studio
 
+![Native workspace](Docs/Workspace.png)
+
 A native iPad and Mac workspace for developing camera RAW images without changing the original. Import a supported RAW or DNG, compare the baseline with your adjustments, save a recipe, and export an sRGB JPEG.
 
 ## Editing workflow
